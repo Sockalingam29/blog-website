@@ -19,7 +19,7 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(express.static("public"));
 
-mongoose.connect("mongodb://localhost:27017/blogDB");
+mongoose.connect("mongodb+srv://admin-socka:test123@cluster0.dnlpd.mongodb.net/postsDB");
 
 const postSchema = new mongoose.Schema({
   title: String,
@@ -76,6 +76,6 @@ app.post("/compose", function (req, res) {
 
 
 
-app.listen(3000, function () {
-  console.log("Server started on port 3000");
+app.listen(process.env.PORT || 3000, function () {
+  console.log("Server started");
 });
