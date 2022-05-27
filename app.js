@@ -1,8 +1,7 @@
-//jshint esversion:6
-
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
+const mongoose=require("mongoose");
 var _ = require('lodash');
 
 const homeStartingContent = "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
@@ -20,10 +19,21 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(express.static("public"));
 
+mongoose.connect("mongodb://localhost:27017/blogDB");
+
+const postSchema = new mongoose.Schema({
+  title: String,
+  content: String
+});
+
+const Post = mongoose.model("Post", postSchema);
+
 app.get("/", function (req, res) {
-  res.render("home", {
-    homeStartingContent:homeStartingContent,
-    posts: posts
+  Post.find({}, function (err, posts) {
+    res.render("home", {
+      homeStartingContent:homeStartingContent,
+      posts: posts
+    });
   });
 })
 
@@ -44,31 +54,25 @@ app.get("/compose", function (req, res) {
 })
 
 app.get("/posts/:title",function(req,res){
-  const urlTitle=_.lowerCase(req.params.title);
-  posts.forEach(postContent => {
-    const postTitle=_.lowerCase(postContent.postTitle)
-    if(urlTitle==postTitle)
-    {
-      res.render("post",{
-        postTitle:postContent.postTitle,
-        postBody:postContent.postBody
-      })
-    }
-  });
+  const urlTitle=req.params.title;
+  Post.findOne({_id:urlTitle},function(err,post){
+    res.render("post",{
+      title:post.title,
+      content:post.content
+    });
+  })
 });
 
 app.post("/compose", function (req, res) {
-  let postContent = {
-    postTitle: req.body.postTitle,
-    postBody: req.body.postBody
-  };
-  posts.push(postContent);
-  res.redirect("/");
+  let postContent = new Post({
+    title: req.body.postTitle,
+    content: req.body.postBody
+  });
+  postContent.save(function (err) {
+    if(err)console.log(err);
+    else res.redirect("/");
+  });
 })
-
-
-
-
 
 
 
